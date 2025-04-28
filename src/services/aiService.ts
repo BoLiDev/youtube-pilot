@@ -2,20 +2,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
 import { PromptTemplate } from "@langchain/core/prompts"
 import { StringOutputParser } from "@langchain/core/output_parsers"
 import { RunnableSequence } from "@langchain/core/runnables"
-
-// 确保你有GOOGLE_API_KEY
-const GOOGLE_API_KEY = process.env.PLASMO_PUBLIC_GOOGLE_API_KEY
-
-if (!GOOGLE_API_KEY) {
-  console.error("没有找到GOOGLE_API_KEY环境变量")
-}
-
-// 创建Gemini AI模型实例
-const model = new ChatGoogleGenerativeAI({
-  apiKey: GOOGLE_API_KEY,
-  model: "gemini-2.0-flash",
-  maxOutputTokens: 2048,
-})
+import { getApiKey } from "../storage/keyStorage"
 
 // 创建用于视频概要的提示模板
 const summaryPromptTemplate = PromptTemplate.fromTemplate(`
@@ -41,19 +28,22 @@ const detailedNotesPromptTemplate = PromptTemplate.fromTemplate(`
 请以Markdown格式输出内容，使用适当的标题、列表和格式来提高可读性。
 `)
 
-// 生成视频概要的链
-const summarizeVideoChain = RunnableSequence.from([
-  summaryPromptTemplate,
-  model,
-  new StringOutputParser()
-])
+/**
+ * 创建Gemini AI模型实例
+ */
+const createModel = async () => {
+  const apiKey = await getApiKey()
 
-// 生成详细笔记的链
-const createDetailedNotesChain = RunnableSequence.from([
-  detailedNotesPromptTemplate,
-  model,
-  new StringOutputParser()
-])
+  if (!apiKey) {
+    throw new Error("没有设置API密钥，请在设置页面添加您的Google Gemini API密钥")
+  }
+
+  return new ChatGoogleGenerativeAI({
+    apiKey,
+    model: "gemini-2.0-flash",
+    maxOutputTokens: 2048,
+  })
+}
 
 /**
  * 获取视频URL的简短概要
@@ -61,11 +51,15 @@ const createDetailedNotesChain = RunnableSequence.from([
 export const getVideoSummary = async (videoUrl: string): Promise<string> => {
   try {
     console.log(`尝试获取视频摘要，URL: ${videoUrl}`)
-    console.log(`API密钥状态: ${GOOGLE_API_KEY ? "已设置" : "未设置"}`)
 
-    if (!GOOGLE_API_KEY) {
-      throw new Error("缺少Google API密钥，请在.env文件中设置PLASMO_PUBLIC_GOOGLE_API_KEY")
-    }
+    const model = await createModel()
+    console.log("成功创建AI模型")
+
+    const summarizeVideoChain = RunnableSequence.from([
+      summaryPromptTemplate,
+      model,
+      new StringOutputParser()
+    ])
 
     const summary = await summarizeVideoChain.invoke({
       videoUrl
@@ -91,11 +85,15 @@ export const getVideoSummary = async (videoUrl: string): Promise<string> => {
 export const getVideoDetailedNotes = async (videoUrl: string): Promise<string> => {
   try {
     console.log(`尝试生成详细笔记，URL: ${videoUrl}`)
-    console.log(`API密钥状态: ${GOOGLE_API_KEY ? "已设置" : "未设置"}`)
 
-    if (!GOOGLE_API_KEY) {
-      throw new Error("缺少Google API密钥，请在.env文件中设置PLASMO_PUBLIC_GOOGLE_API_KEY")
-    }
+    const model = await createModel()
+    console.log("成功创建AI模型")
+
+    const createDetailedNotesChain = RunnableSequence.from([
+      detailedNotesPromptTemplate,
+      model,
+      new StringOutputParser()
+    ])
 
     const notes = await createDetailedNotesChain.invoke({
       videoUrl

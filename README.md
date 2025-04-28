@@ -20,20 +20,21 @@
 
 1. 克隆此仓库：`git clone [仓库URL]`
 2. 安装依赖：`pnpm install`
-3. 添加`.env`文件并设置你的Google API密钥：`PLASMO_PUBLIC_GOOGLE_API_KEY=你的API密钥`
-4. 构建扩展：`pnpm build`
-5. 在Chrome中打开`chrome://extensions/`
-6. 开启"开发者模式"
-7. 点击"加载已解压的扩展程序"
-8. 选择`build/chrome-mv3-dev`目录
+3. 构建扩展：`pnpm build`
+4. 在Chrome中打开`chrome://extensions/`
+5. 开启"开发者模式"
+6. 点击"加载已解压的扩展程序"
+7. 选择`build/chrome-mv3-dev`目录
 
 ## 使用方法
 
 1. 访问任意YouTube视频页面
 2. 点击浏览器工具栏中的扩展图标
-3. 扩展将自动检测视频URL并提供摘要选项
-4. 选择"快速总结"获取简短摘要，或"详细笔记"获取完整笔记
-5. 点击"下载笔记"将详细笔记保存为Markdown文件
+3. 在"设置"标签页中添加您的Google Gemini API密钥
+   - 如果您没有API密钥，请前往[Google AI Studio](https://ai.google.dev/)申请
+4. 扩展将自动检测视频URL
+5. 选择"快速总结"获取简短摘要，或"详细笔记"获取完整笔记
+6. 点击"下载笔记"将详细笔记保存为Markdown文件
 
 ## 依赖技术
 
@@ -58,7 +59,8 @@ pnpm build
 
 ## 注意事项
 
-- 使用此扩展需要有效的Google API密钥
+- 使用此扩展需要有Google Gemini API密钥，您可以在扩展的设置页面中添加
+- API密钥安全存储在您的浏览器中，不会发送到除Google AI服务外的任何其他地方
 - 摘要和笔记的质量取决于视频内容的清晰度和结构
 - 此扩展仅用于教育和研究目的
 

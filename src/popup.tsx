@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { getVideoSummary, getVideoDetailedNotes } from "./services/aiService"
 import { downloadAsMarkdown, generateFilenameFromTitle } from "./utils/fileUtils"
 import { getVideoUrlFromCurrentTab, getVideoTitleFromTab, isYouTubeVideoPage } from "./utils/tabUtils"
 import LoadingSpinner from "./components/LoadingSpinner"
 import MarkdownRenderer from "./components/MarkdownRenderer"
+import ApiKeyInput from "./components/ApiKeyInput"
 import "./styles/popup.css"
 
 enum TabType {
   QUICK_SUMMARY = "quick_summary",
-  DETAILED_NOTES = "detailed_notes"
+  DETAILED_NOTES = "detailed_notes",
+  SETTINGS = "settings"
 }
 
 function IndexPopup() {
@@ -22,20 +24,18 @@ function IndexPopup() {
   const [error, setError] = useState<string>("")
   const [isYouTubeVideo, setIsYouTubeVideo] = useState<boolean>(false)
   const [debug, setDebug] = useState<string>("")
+  const [apiKey, setApiKey] = useState<string | null>(null)
 
-  // 检查环境变量
-  useEffect(() => {
-    const googleApiKey = process.env.PLASMO_PUBLIC_GOOGLE_API_KEY
+  // 处理API密钥变化
+  const handleApiKeyChange = useCallback((newApiKey: string | null) => {
+    setApiKey(newApiKey)
+    console.log("API密钥已更新:", newApiKey ? "已设置" : "未设置")
 
-    if (!googleApiKey) {
-      setError("未设置Google API密钥，请在.env文件中添加PLASMO_PUBLIC_GOOGLE_API_KEY")
-      setDebug(`环境变量：${Object.keys(process.env).filter(key => key.startsWith('PLASMO_')).join(', ')}`)
-    } else {
-      setDebug(`API密钥状态: 已设置 (${googleApiKey.substring(0, 5)}...${googleApiKey.substring(googleApiKey.length - 4)})`)
+    // 清除错误消息（如果是由于没有API密钥导致的）
+    if (newApiKey && error.includes("API密钥")) {
+      setError("")
     }
-
-    console.log("环境变量:", process.env)
-  }, [])
+  }, [error])
 
   // 初始化，获取当前标签页信息
   useEffect(() => {
@@ -53,8 +53,8 @@ function IndexPopup() {
           setVideoTitle(title)
         }
 
-        // 如果是YouTube视频页面，自动获取摘要
-        if (isYTVideo && url) {
+        // 如果是YouTube视频页面且已设置API密钥，自动获取摘要
+        if (isYTVideo && url && apiKey) {
           handleGetSummary(url)
         }
       } catch (error) {
@@ -64,12 +64,18 @@ function IndexPopup() {
     }
 
     fetchCurrentTab()
-  }, [])
+  }, [apiKey])
 
   // 获取视频摘要
   const handleGetSummary = async (url: string = videoUrl) => {
     if (!url) {
       setError("请输入有效的YouTube视频URL")
+      return
+    }
+
+    if (!apiKey) {
+      setError("请先在设置中添加Google Gemini API密钥")
+      setActiveTab(TabType.SETTINGS)
       return
     }
 
@@ -91,6 +97,12 @@ function IndexPopup() {
   const handleGetDetailedNotes = async () => {
     if (!videoUrl) {
       setError("请输入有效的YouTube视频URL")
+      return
+    }
+
+    if (!apiKey) {
+      setError("请先在设置中添加Google Gemini API密钥")
+      setActiveTab(TabType.SETTINGS)
       return
     }
 
@@ -120,8 +132,8 @@ function IndexPopup() {
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab)
 
-    // 如果切换到详细笔记标签且还没有内容，自动获取笔记
-    if (tab === TabType.DETAILED_NOTES && !detailedNotes && !isLoadingNotes && videoUrl) {
+    // 如果切换到详细笔记标签且还没有内容，且有API密钥，自动获取笔记
+    if (tab === TabType.DETAILED_NOTES && !detailedNotes && !isLoadingNotes && videoUrl && apiKey) {
       handleGetDetailedNotes()
     }
   }
@@ -141,17 +153,6 @@ function IndexPopup() {
         </div>
       )}
 
-      <div className="input-group">
-        <label htmlFor="video-url">YouTube视频URL</label>
-        <input
-          id="video-url"
-          type="text"
-          value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=..."
-        />
-      </div>
-
       <div className="tabs">
         <div
           className={`tab ${activeTab === TabType.QUICK_SUMMARY ? "active" : ""}`}
@@ -165,13 +166,36 @@ function IndexPopup() {
         >
           详细笔记
         </div>
+        <div
+          className={`tab ${activeTab === TabType.SETTINGS ? "active" : ""}`}
+          onClick={() => handleTabChange(TabType.SETTINGS)}
+        >
+          设置
+        </div>
+      </div>
+
+      <div className={`tab-content ${activeTab === TabType.SETTINGS ? "active" : ""}`}>
+        <ApiKeyInput onApiKeyChange={handleApiKeyChange} />
+      </div>
+
+      <div className={`tab-content ${activeTab === TabType.QUICK_SUMMARY || activeTab === TabType.DETAILED_NOTES ? "active" : ""}`}>
+        <div className="input-group">
+          <label htmlFor="video-url">YouTube视频URL</label>
+          <input
+            id="video-url"
+            type="text"
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=..."
+          />
+        </div>
       </div>
 
       <div className={`tab-content ${activeTab === TabType.QUICK_SUMMARY ? "active" : ""}`}>
         <button
           className="button"
           onClick={() => handleGetSummary()}
-          disabled={isLoadingSummary || !videoUrl}
+          disabled={isLoadingSummary || !videoUrl || !apiKey}
         >
           获取总结
         </button>
@@ -183,14 +207,20 @@ function IndexPopup() {
             <h3>视频摘要</h3>
             <p>{summary}</p>
           </div>
-        ) : null}
+        ) : (
+          !apiKey && (
+            <div className="instruction-message">
+              请先在"设置"标签页中添加您的Google Gemini API密钥
+            </div>
+          )
+        )}
       </div>
 
       <div className={`tab-content ${activeTab === TabType.DETAILED_NOTES ? "active" : ""}`}>
         <button
           className="button"
           onClick={handleGetDetailedNotes}
-          disabled={isLoadingNotes || !videoUrl}
+          disabled={isLoadingNotes || !videoUrl || !apiKey}
         >
           生成详细笔记
         </button>
@@ -211,7 +241,13 @@ function IndexPopup() {
               </button>
             </div>
           </>
-        ) : null}
+        ) : (
+          !apiKey && (
+            <div className="instruction-message">
+              请先在"设置"标签页中添加您的Google Gemini API密钥
+            </div>
+          )
+        )}
       </div>
     </div>
   )

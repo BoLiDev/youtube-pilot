@@ -201,3 +201,120 @@ h1 img {
   padding-top: 8px;
   margin-top: 8px;
 }
+
+/* API密钥相关样式 */
+.api-key-container {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.api-key-container h3 {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.api-key-info {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.api-key-info a {
+  color: #0066cc;
+  margin: 0 4px;
+  text-decoration: none;
+}
+
+.api-key-info a:hover {
+  text-decoration: underline;
+}
+
+.api-key-info code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  margin: 0 4px;
+}
+
+.saved-key-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.api-key-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.input-wrapper input {
+  flex: 1;
+  padding-right: 60px;
+}
+
+.toggle-key-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.toggle-key-btn:hover {
+  color: #000;
+  text-decoration: underline;
+}
+
+/* 消息样式 */
+.message {
+  padding: 8px 12px;
+  margin-top: 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.message.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.message.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.message.info {
+  background-color: #e3f2fd;
+  color: #0277bd;
+  border: 1px solid #bbdefb;
+}
+
+.instruction-message {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 4px;
+  color: #0277bd;
+  font-size: 14px;
+  text-align: center;
+}
