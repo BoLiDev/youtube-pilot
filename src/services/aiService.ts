@@ -60,13 +60,28 @@ const createDetailedNotesChain = RunnableSequence.from([
  */
 export const getVideoSummary = async (videoUrl: string): Promise<string> => {
   try {
+    console.log(`尝试获取视频摘要，URL: ${videoUrl}`)
+    console.log(`API密钥状态: ${GOOGLE_API_KEY ? "已设置" : "未设置"}`)
+
+    if (!GOOGLE_API_KEY) {
+      throw new Error("缺少Google API密钥，请在.env文件中设置PLASMO_PUBLIC_GOOGLE_API_KEY")
+    }
+
     const summary = await summarizeVideoChain.invoke({
       videoUrl
     })
     return summary
   } catch (error) {
     console.error("获取视频摘要时出错:", error)
-    throw new Error("无法生成视频摘要。请稍后再试。")
+    // 保留并传递原始错误信息
+    if (error.message) {
+      throw new Error(`AI摘要生成失败: ${error.message}`)
+    } else if (error.response) {
+      // 处理API响应错误
+      throw new Error(`API错误 - 状态码: ${error.response.status}, 消息: ${JSON.stringify(error.response.data || {})}`)
+    } else {
+      throw new Error(`无法生成视频摘要: ${String(error)}`)
+    }
   }
 }
 
@@ -75,12 +90,27 @@ export const getVideoSummary = async (videoUrl: string): Promise<string> => {
  */
 export const getVideoDetailedNotes = async (videoUrl: string): Promise<string> => {
   try {
+    console.log(`尝试生成详细笔记，URL: ${videoUrl}`)
+    console.log(`API密钥状态: ${GOOGLE_API_KEY ? "已设置" : "未设置"}`)
+
+    if (!GOOGLE_API_KEY) {
+      throw new Error("缺少Google API密钥，请在.env文件中设置PLASMO_PUBLIC_GOOGLE_API_KEY")
+    }
+
     const notes = await createDetailedNotesChain.invoke({
       videoUrl
     })
     return notes
   } catch (error) {
     console.error("生成详细笔记时出错:", error)
-    throw new Error("无法生成详细笔记。请稍后再试。")
+    // 保留并传递原始错误信息
+    if (error.message) {
+      throw new Error(`AI笔记生成失败: ${error.message}`)
+    } else if (error.response) {
+      // 处理API响应错误
+      throw new Error(`API错误 - 状态码: ${error.response.status}, 消息: ${JSON.stringify(error.response.data || {})}`)
+    } else {
+      throw new Error(`无法生成详细笔记: ${String(error)}`)
+    }
   }
 }

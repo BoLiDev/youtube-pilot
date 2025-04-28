@@ -21,6 +21,21 @@ function IndexPopup() {
   const [isLoadingNotes, setIsLoadingNotes] = useState<boolean>(false)
   const [error, setError] = useState<string>("")
   const [isYouTubeVideo, setIsYouTubeVideo] = useState<boolean>(false)
+  const [debug, setDebug] = useState<string>("")
+
+  // 检查环境变量
+  useEffect(() => {
+    const googleApiKey = process.env.PLASMO_PUBLIC_GOOGLE_API_KEY
+
+    if (!googleApiKey) {
+      setError("未设置Google API密钥，请在.env文件中添加PLASMO_PUBLIC_GOOGLE_API_KEY")
+      setDebug(`环境变量：${Object.keys(process.env).filter(key => key.startsWith('PLASMO_')).join(', ')}`)
+    } else {
+      setDebug(`API密钥状态: 已设置 (${googleApiKey.substring(0, 5)}...${googleApiKey.substring(googleApiKey.length - 4)})`)
+    }
+
+    console.log("环境变量:", process.env)
+  }, [])
 
   // 初始化，获取当前标签页信息
   useEffect(() => {
@@ -66,7 +81,7 @@ function IndexPopup() {
       setSummary(result)
     } catch (error) {
       console.error("获取视频摘要时出错:", error)
-      setError("无法生成视频摘要。请稍后再试。")
+      setError(`生成摘要失败: ${error.message || "未知错误"}`)
     } finally {
       setIsLoadingSummary(false)
     }
@@ -87,7 +102,7 @@ function IndexPopup() {
       setDetailedNotes(result)
     } catch (error) {
       console.error("获取详细笔记时出错:", error)
-      setError("无法生成详细笔记。请稍后再试。")
+      setError(`生成笔记失败: ${error.message || "未知错误"}`)
     } finally {
       setIsLoadingNotes(false)
     }
@@ -115,7 +130,16 @@ function IndexPopup() {
     <div className="container">
       <h1>YouTube视频总结</h1>
 
-      {error && <div className="error">{error}</div>}
+      {error && (
+        <div className="error">
+          <h4>错误信息</h4>
+          <details>
+            <summary>{error.split(':')[0]}</summary>
+            <p>{error}</p>
+            {debug && <p className="debug-info">调试信息: {debug}</p>}
+          </details>
+        </div>
+      )}
 
       <div className="input-group">
         <label htmlFor="video-url">YouTube视频URL</label>
