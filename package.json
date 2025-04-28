@@ -1,8 +1,8 @@
 {
-  "name": "know-fresh-chicken",
-  "displayName": "Know fresh chicken",
+  "name": "youtube-summarizer",
+  "displayName": "YouTube视频总结",
   "version": "0.0.1",
-  "description": "A basic Plasmo extension.",
+  "description": "一个使用Gemini AI自动总结YouTube视频内容的Chrome扩展。",
   "author": "Plasmo Corp. <foss@plasmo.com>",
   "scripts": {
     "dev": "plasmo dev",
@@ -10,9 +10,13 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@langchain/core": "0.3.49",
+    "@langchain/google-genai": "0.2.5",
+    "langchain": "0.3.24",
     "plasmo": "0.90.3",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "zod": "3.24.3"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "4.1.1",
@@ -25,10 +29,11 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
+      "https://*.youtube.com/*"
     ],
     "permissions": [
-      "tabs"
+      "tabs",
+      "activeTab"
     ]
   }
 }
