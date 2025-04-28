@@ -29,7 +29,8 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*.youtube.com/*"
+      "https://*.youtube.com/*",
+      "https://yt-transcript-fetcher.fly.dev/*"
     ],
     "permissions": [
       "tabs",
