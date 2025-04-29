@@ -1,6 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getApiKey } from "../storage/keyStorage"
 
+
+const modelName = "gemini-2.0-flash"
+
 /**
  * 创建Gemini AI模型实例
  */
@@ -12,7 +15,10 @@ const createModel = async () => {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+  console.log(`使用模型 ${modelName}`)
+
+  return genAI.getGenerativeModel({ model: modelName });
 }
 
 /**
@@ -42,10 +48,10 @@ const extractVideoId = (url: string): string | null => {
  */
 export const getVideoSummary = async (videoUrl: string): Promise<string> => {
   try {
-
     const model = await createModel()
 
     const videoId = extractVideoId(videoUrl)
+
     if (!videoId) {
       throw new Error("无法从URL中提取视频ID")
     }
