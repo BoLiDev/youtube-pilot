@@ -1,14 +1,17 @@
 import { observer } from "mobx-react-lite"
 import { useEffect } from "react"
 
-import ConfigTab from "./components/ConfigTab"
-import DetailedNotesTab from "./components/DetailedNotesTab"
-import ErrorMessage from "./components/ErrorMessage"
-import QuickSummaryTab from "./components/QuickSummaryTab"
-import Tabs from "./components/Tabs"
-import { popupStore } from "./store/PopupStore"
+import {
+  ConfigTab,
+  DetailedNotesTab,
+  ErrorMessage,
+  QuickSummaryTab,
+  Tabs
+} from "./components"
+import { popupStore } from "./store"
 
-import "./styles/popup.css"
+import "./styles/global.css"
+import "./popup.css"
 
 const IndexPopup = observer(() => {
   useEffect(() => {

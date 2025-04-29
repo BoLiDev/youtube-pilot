@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react"
-import { saveApiKey, getApiKey, clearApiKey } from "../storage/keyStorage"
+
+import { clearApiKey, getApiKey, saveApiKey } from "~/storage/keyStorage"
+
+import styles from "./ApiKeyInput.module.css"
+
+import "~/styles/shared.css"
 
 interface ApiKeyInputProps {
   onApiKeyChange: (apiKey: string | null) => void
@@ -9,7 +14,10 @@ export default function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
   const [apiKey, setApiKey] = useState<string>("")
   const [savedApiKey, setSavedApiKey] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null)
+  const [message, setMessage] = useState<{
+    text: string
+    type: "success" | "error" | "info"
+  } | null>(null)
   const [showApiKey, setShowApiKey] = useState<boolean>(false)
 
   // 加载保存的API密钥
@@ -83,12 +91,12 @@ export default function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
   }
 
   return (
-    <div className="api-key-container">
+    <div className={styles.apiKeyContainer}>
       <h3>设置 Google Gemini API 密钥</h3>
 
       {savedApiKey ? (
-        <div className="saved-key-container">
-          <p className="api-key-info">
+        <div className={styles.savedKeyContainer}>
+          <p className={styles.apiKeyInfo}>
             API密钥已设置:
             <code>
               {showApiKey
@@ -96,35 +104,32 @@ export default function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
                 : `${savedApiKey.substring(0, 4)}...${savedApiKey.substring(savedApiKey.length - 4)}`}
             </code>
             <button
-              className="toggle-key-btn"
+              className={styles.toggleKeyBtn}
               onClick={() => setShowApiKey(!showApiKey)}
-              title={showApiKey ? "隐藏密钥" : "显示完整密钥"}
-            >
+              title={showApiKey ? "隐藏密钥" : "显示完整密钥"}>
               {showApiKey ? "隐藏" : "显示"}
             </button>
           </p>
           <button
             className="button button-secondary"
             onClick={handleClearApiKey}
-            disabled={isLoading}
-          >
+            disabled={isLoading}>
             {isLoading ? "处理中..." : "删除密钥"}
           </button>
         </div>
       ) : (
-        <div className="api-key-form">
-          <p className="api-key-info">
+        <div className={styles.apiKeyForm}>
+          <p className={styles.apiKeyInfo}>
             请输入您的 Google Gemini API 密钥。您可以在
             <a
               href="https://ai.google.dev/"
               target="_blank"
-              rel="noopener noreferrer"
-            >
+              rel="noopener noreferrer">
               Google AI Studio
             </a>
             创建密钥。
           </p>
-          <div className="input-wrapper">
+          <div className={styles.inputWrapper}>
             <input
               type={showApiKey ? "text" : "password"}
               value={apiKey}
@@ -133,26 +138,24 @@ export default function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
               disabled={isLoading}
             />
             <button
-              className="toggle-key-btn"
+              className={styles.toggleKeyBtn}
               onClick={() => setShowApiKey(!showApiKey)}
               title={showApiKey ? "隐藏" : "显示"}
-              type="button"
-            >
+              type="button">
               {showApiKey ? "隐藏" : "显示"}
             </button>
           </div>
           <button
             className="button"
             onClick={handleSaveApiKey}
-            disabled={isLoading || !apiKey}
-          >
+            disabled={isLoading || !apiKey}>
             {isLoading ? "保存中..." : "保存密钥"}
           </button>
         </div>
       )}
 
       {message && (
-        <div className={`message ${message.type}`}>
+        <div className={`${styles.message} ${styles[message.type]}`}>
           {message.text}
         </div>
       )}

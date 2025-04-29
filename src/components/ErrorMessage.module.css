@@ -1,0 +1,31 @@
+.errorContainer {
+  /* Using styles similar to the original .error */
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px 15px;
+  border: 1px solid #ef9a9a;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.errorContainer h4 {
+  margin-top: 0;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.errorContainer details {
+  margin-left: 5px;
+}
+
+.errorContainer summary {
+  cursor: pointer;
+  font-weight: normal;
+}
+
+.errorContainer p {
+  margin-top: 5px;
+  margin-bottom: 0;
+  font-size: 0.9em;
+  word-break: break-all;
+}

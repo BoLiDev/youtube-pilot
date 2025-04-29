@@ -1,0 +1,25 @@
+.tabsContainer {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  /* Add transition for smoother visual feedback */
+  transition:
+    border-bottom-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
+.tab:hover {
+  color: #990000; /* Slightly change color on hover */
+}
+
+.tab.active {
+  border-bottom-color: #cc0000;
+  font-weight: 500;
+  color: #cc0000; /* Ensure active tab text color matches border */
+}

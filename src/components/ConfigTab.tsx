@@ -1,9 +1,10 @@
 import { observer } from "mobx-react-lite"
 
-import { popupStore, TabType } from "../store/PopupStore"
+import { popupStore, TabType } from "~/store"
+
 import ApiKeyInput from "./ApiKeyInput"
 
-import "../styles/popup.css"
+import "~/styles/shared.css"
 
 const ConfigTab = observer(() => {
   return (

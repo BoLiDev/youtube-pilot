@@ -1,0 +1,39 @@
+/* Styles specific to ProgressIndicator component */
+.progressIndicator {
+  height: 2.5em;
+  overflow: hidden;
+  position: relative;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  padding: 0 10px;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progressIndicator p {
+  margin: 0;
+  line-height: 2.5em;
+  white-space: nowrap;
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  animation: scroll-up 8s linear infinite;
+}
+
+@keyframes scroll-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}

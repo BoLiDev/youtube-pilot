@@ -1,8 +1,8 @@
 import { observer } from "mobx-react-lite"
 
-import { popupStore } from "../store/PopupStore"
+import { popupStore } from "~/store"
 
-import "../styles/popup.css"
+import "~/styles/shared.css"
 
 const UrlInputArea = observer(() => {
   const isOverallLoading = popupStore.isOverallLoading

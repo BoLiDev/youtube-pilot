@@ -1,10 +1,11 @@
 import { observer } from "mobx-react-lite"
 
-import { popupStore, TabType } from "../store/PopupStore"
+import { popupStore, TabType } from "~/store"
+
 import ProgressIndicator from "./ProgressIndicator"
 import UrlInputArea from "./UrlInputArea"
 
-import "../styles/popup.css"
+import "~/styles/shared.css"
 
 const QuickSummaryTab = observer(() => {
   return (
