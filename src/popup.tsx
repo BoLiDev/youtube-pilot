@@ -1,256 +1,173 @@
-import { useEffect, useState, useCallback } from "react"
-import { getVideoSummary, getVideoDetailedNotes } from "./services/aiService"
-import { downloadAsMarkdown, generateFilenameFromTitle } from "./utils/fileUtils"
-import { getVideoUrlFromCurrentTab, getVideoTitleFromTab, isYouTubeVideoPage } from "./utils/tabUtils"
-import LoadingSpinner from "./components/LoadingSpinner"
-import MarkdownRenderer from "./components/MarkdownRenderer"
+import { observer } from "mobx-react-lite"
+import { useEffect } from "react"
+
 import ApiKeyInput from "./components/ApiKeyInput"
+import MarkdownRenderer from "./components/MarkdownRenderer"
+import { aiServiceStore } from "./store/AIServiceStore"
+import { popupStore, TabType } from "./store/PopupStore"
+
 import "./styles/popup.css"
 
-enum TabType {
-  QUICK_SUMMARY = "quick_summary",
-  DETAILED_NOTES = "detailed_notes",
-  SETTINGS = "settings"
-}
+const ProgressIndicator = observer(() => {
+  const shouldShow = popupStore.isLoadingSummary || popupStore.isLoadingNotes
 
-function IndexPopup() {
-  const [activeTab, setActiveTab] = useState<TabType>(TabType.QUICK_SUMMARY)
-  const [videoUrl, setVideoUrl] = useState<string>("")
-  const [videoTitle, setVideoTitle] = useState<string>("")
-  const [summary, setSummary] = useState<string>("")
-  const [detailedNotes, setDetailedNotes] = useState<string>("")
-  const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false)
-  const [isLoadingNotes, setIsLoadingNotes] = useState<boolean>(false)
-  const [error, setError] = useState<string>("")
-  const [isYouTubeVideo, setIsYouTubeVideo] = useState<boolean>(false)
-  const [debug, setDebug] = useState<string>("")
-  const [apiKey, setApiKey] = useState<string | null>(null)
+  if (!shouldShow || aiServiceStore.status === "闲置") return null
 
-  // 处理API密钥变化
-  const handleApiKeyChange = useCallback((newApiKey: string | null) => {
-    setApiKey(newApiKey)
-    console.log("API密钥已更新:", newApiKey ? "已设置" : "未设置")
+  return (
+    <div className="progress-indicator">
+      <p>{aiServiceStore.status}</p>
+    </div>
+  )
+})
 
-    // 清除错误消息（如果是由于没有API密钥导致的）
-    if (newApiKey && error.includes("API密钥")) {
-      setError("")
-    }
-  }, [error])
+const Tabs = observer(() => {
+  return (
+    <div className="tabs">
+      <div
+        className={`tab ${popupStore.activeTab === TabType.QUICK_SUMMARY ? "active" : ""}`}
+        onClick={() => popupStore.setActiveTab(TabType.QUICK_SUMMARY)}>
+        快速总结
+      </div>
+      <div
+        className={`tab ${popupStore.activeTab === TabType.DETAILED_NOTES ? "active" : ""}`}
+        onClick={() => popupStore.setActiveTab(TabType.DETAILED_NOTES)}>
+        详细笔记
+      </div>
+      <div
+        className={`tab ${popupStore.activeTab === TabType.SETTINGS ? "active" : ""}`}
+        onClick={() => popupStore.setActiveTab(TabType.SETTINGS)}>
+        设置
+      </div>
+    </div>
+  )
+})
 
-  // 初始化，获取当前标签页信息
+const ErrorMessage = observer(() => {
+  if (!popupStore.error) return null
+  return (
+    <div className="error">
+      <h4>错误信息</h4>
+      <details open={!!popupStore.error}>
+        <summary>{popupStore.error.split(":")[0]}</summary>
+        <p>{popupStore.error}</p>
+      </details>
+    </div>
+  )
+})
+
+const ConfigTab = observer(() => {
+  return (
+    <div
+      className={`tab-content ${popupStore.activeTab === TabType.SETTINGS ? "active" : ""}`}>
+      <ApiKeyInput onApiKeyChange={(key) => popupStore.saveApiKey(key || "")} />
+    </div>
+  )
+})
+
+const UrlInputArea = observer(() => {
+  const isOverallLoading = popupStore.isOverallLoading
+  return (
+    <div className="input-group">
+      <label htmlFor="video-url">YouTube视频URL</label>
+      <input
+        id="video-url"
+        type="text"
+        value={popupStore.videoUrl}
+        onChange={(e) => popupStore.setVideoUrl(e.target.value)}
+        placeholder="https://www.youtube.com/watch?v=..."
+        disabled={isOverallLoading}
+      />
+    </div>
+  )
+})
+
+const QuickSummaryTab = observer(() => {
+  return (
+    <div
+      className={`tab-content ${popupStore.activeTab === TabType.QUICK_SUMMARY ? "active" : ""}`}>
+      <UrlInputArea />
+      <button
+        className="button"
+        onClick={() => popupStore.fetchSummary()}
+        disabled={popupStore.isLoadingSummary || !popupStore.isAvailable}>
+        {popupStore.isLoadingSummary ? "处理中..." : "获取总结"}
+      </button>
+
+      {popupStore.isLoadingSummary ? (
+        <ProgressIndicator />
+      ) : popupStore.summary ? (
+        <div className="result-area">
+          <h3>视频摘要</h3>
+          <p>{popupStore.summary}</p>
+        </div>
+      ) : (
+        !popupStore.apiKey &&
+        !popupStore.isLoadingSummary && (
+          <div className="instruction-message">
+            请先在"设置"标签页中添加您的Google Gemini API密钥
+          </div>
+        )
+      )}
+    </div>
+  )
+})
+
+const DetailedNotesTab = observer(() => {
+  return (
+    <div
+      className={`tab-content ${popupStore.activeTab === TabType.DETAILED_NOTES ? "active" : ""}`}>
+      <UrlInputArea />
+      <button
+        className="button"
+        onClick={() => popupStore.fetchDetailedNotes()}
+        disabled={popupStore.isLoadingNotes || !popupStore.isAvailable}>
+        {popupStore.isLoadingNotes ? "处理中..." : "生成详细笔记"}
+      </button>
+
+      {popupStore.isLoadingNotes ? (
+        <ProgressIndicator />
+      ) : popupStore.detailedNotes ? (
+        <>
+          <div className="result-area">
+            <MarkdownRenderer content={popupStore.detailedNotes} />
+          </div>
+          <div className="button-group">
+            <button
+              className="button"
+              onClick={() => popupStore.downloadNotes()}
+              disabled={!popupStore.detailedNotes}>
+              下载笔记
+            </button>
+          </div>
+        </>
+      ) : (
+        !popupStore.apiKey &&
+        !popupStore.isLoadingNotes && (
+          <div className="instruction-message">
+            请先在"设置"标签页中添加您的Google Gemini API密钥
+          </div>
+        )
+      )}
+    </div>
+  )
+})
+
+const IndexPopup = observer(() => {
   useEffect(() => {
-    const fetchCurrentTab = async () => {
-      try {
-        const url = await getVideoUrlFromCurrentTab()
-        const isYTVideo = await isYouTubeVideoPage()
-        const title = await getVideoTitleFromTab()
-
-        setIsYouTubeVideo(isYTVideo)
-        if (url) {
-          setVideoUrl(url)
-        }
-        if (title) {
-          setVideoTitle(title)
-        }
-
-        // 如果是YouTube视频页面且已设置API密钥，自动获取摘要
-        if (isYTVideo && url && apiKey) {
-          handleGetSummary(url)
-        }
-      } catch (error) {
-        console.error("获取当前标签页信息时出错:", error)
-        setError("无法获取当前标签页信息。请刷新后重试。")
-      }
-    }
-
-    fetchCurrentTab()
-  }, [apiKey])
-
-  // 获取视频摘要
-  const handleGetSummary = async (url: string = videoUrl) => {
-    if (!url) {
-      setError("请输入有效的YouTube视频URL")
-      return
-    }
-
-    if (!apiKey) {
-      setError("请先在设置中添加Google Gemini API密钥")
-      setActiveTab(TabType.SETTINGS)
-      return
-    }
-
-    setError("")
-    setIsLoadingSummary(true)
-
-    try {
-      const result = await getVideoSummary(url)
-      setSummary(result)
-    } catch (error) {
-      console.error("获取视频摘要时出错:", error)
-      setError(`生成摘要失败: ${error.message || "未知错误"}`)
-    } finally {
-      setIsLoadingSummary(false)
-    }
-  }
-
-  // 获取详细笔记
-  const handleGetDetailedNotes = async () => {
-    if (!videoUrl) {
-      setError("请输入有效的YouTube视频URL")
-      return
-    }
-
-    if (!apiKey) {
-      setError("请先在设置中添加Google Gemini API密钥")
-      setActiveTab(TabType.SETTINGS)
-      return
-    }
-
-    setError("")
-    setIsLoadingNotes(true)
-
-    try {
-      const result = await getVideoDetailedNotes(videoUrl)
-      setDetailedNotes(result)
-    } catch (error) {
-      console.error("获取详细笔记时出错:", error)
-      setError(`生成笔记失败: ${error.message || "未知错误"}`)
-    } finally {
-      setIsLoadingNotes(false)
-    }
-  }
-
-  // 下载笔记
-  const handleDownloadNotes = () => {
-    if (!detailedNotes) return
-
-    const filename = generateFilenameFromTitle(videoTitle)
-    downloadAsMarkdown(detailedNotes, filename)
-  }
-
-  // 切换标签页
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab)
-
-    // 如果切换到详细笔记标签且还没有内容，且有API密钥，自动获取笔记
-    if (tab === TabType.DETAILED_NOTES && !detailedNotes && !isLoadingNotes && videoUrl && apiKey) {
-      handleGetDetailedNotes()
-    }
-  }
+    popupStore.initialize()
+  }, [])
 
   return (
     <div className="container">
       <h1>YouTube视频总结</h1>
 
-      {error && (
-        <div className="error">
-          <h4>错误信息</h4>
-          <details>
-            <summary>{error.split(':')[0]}</summary>
-            <p>{error}</p>
-            {debug && <p className="debug-info">调试信息: {debug}</p>}
-          </details>
-        </div>
-      )}
-
-      <div className="tabs">
-        <div
-          className={`tab ${activeTab === TabType.QUICK_SUMMARY ? "active" : ""}`}
-          onClick={() => handleTabChange(TabType.QUICK_SUMMARY)}
-        >
-          快速总结
-        </div>
-        <div
-          className={`tab ${activeTab === TabType.DETAILED_NOTES ? "active" : ""}`}
-          onClick={() => handleTabChange(TabType.DETAILED_NOTES)}
-        >
-          详细笔记
-        </div>
-        <div
-          className={`tab ${activeTab === TabType.SETTINGS ? "active" : ""}`}
-          onClick={() => handleTabChange(TabType.SETTINGS)}
-        >
-          设置
-        </div>
-      </div>
-
-      <div className={`tab-content ${activeTab === TabType.SETTINGS ? "active" : ""}`}>
-        <ApiKeyInput onApiKeyChange={handleApiKeyChange} />
-      </div>
-
-      <div className={`tab-content ${activeTab === TabType.QUICK_SUMMARY || activeTab === TabType.DETAILED_NOTES ? "active" : ""}`}>
-        <div className="input-group">
-          <label htmlFor="video-url">YouTube视频URL</label>
-          <input
-            id="video-url"
-            type="text"
-            value={videoUrl}
-            onChange={(e) => setVideoUrl(e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=..."
-          />
-        </div>
-      </div>
-
-      <div className={`tab-content ${activeTab === TabType.QUICK_SUMMARY ? "active" : ""}`}>
-        <button
-          className="button"
-          onClick={() => handleGetSummary()}
-          disabled={isLoadingSummary || !videoUrl || !apiKey}
-        >
-          获取总结
-        </button>
-
-        {isLoadingSummary ? (
-          <LoadingSpinner message="生成摘要中..." />
-        ) : summary ? (
-          <div className="result-area">
-            <h3>视频摘要</h3>
-            <p>{summary}</p>
-          </div>
-        ) : (
-          !apiKey && (
-            <div className="instruction-message">
-              请先在"设置"标签页中添加您的Google Gemini API密钥
-            </div>
-          )
-        )}
-      </div>
-
-      <div className={`tab-content ${activeTab === TabType.DETAILED_NOTES ? "active" : ""}`}>
-        <button
-          className="button"
-          onClick={handleGetDetailedNotes}
-          disabled={isLoadingNotes || !videoUrl || !apiKey}
-        >
-          生成详细笔记
-        </button>
-
-        {isLoadingNotes ? (
-          <LoadingSpinner message="生成详细笔记中..." />
-        ) : detailedNotes ? (
-          <>
-            <div className="result-area">
-              <MarkdownRenderer content={detailedNotes} />
-            </div>
-            <div className="button-group">
-              <button
-                className="button"
-                onClick={handleDownloadNotes}
-              >
-                下载笔记
-              </button>
-            </div>
-          </>
-        ) : (
-          !apiKey && (
-            <div className="instruction-message">
-              请先在"设置"标签页中添加您的Google Gemini API密钥
-            </div>
-          )
-        )}
-      </div>
+      <ErrorMessage />
+      <Tabs />
+      <ConfigTab />
+      <QuickSummaryTab />
+      <DetailedNotesTab />
     </div>
   )
-}
+})
 
 export default IndexPopup
