@@ -2,6 +2,7 @@ import { observer } from "mobx-react-lite"
 
 import { popupStore, TabType } from "~/store"
 
+import MarkdownRenderer from "./MarkdownRenderer"
 import ProgressIndicator from "./ProgressIndicator"
 import UrlInputArea from "./UrlInputArea"
 
@@ -24,7 +25,7 @@ const QuickSummaryTab = observer(() => {
       ) : popupStore.summary ? (
         <div className="result-area">
           <h3>视频摘要</h3>
-          <p>{popupStore.summary}</p>
+          <MarkdownRenderer content={popupStore.summary} />
         </div>
       ) : (
         !popupStore.apiKey &&
