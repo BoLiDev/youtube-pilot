@@ -97,7 +97,7 @@ export default function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
       {savedApiKey ? (
         <div className={styles.savedKeyContainer}>
           <p className={styles.apiKeyInfo}>
-            API密钥已设置:
+            <span>API密钥已设置:</span>
             <code>
               {showApiKey
                 ? savedApiKey
@@ -120,14 +120,14 @@ export default function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
       ) : (
         <div className={styles.apiKeyForm}>
           <p className={styles.apiKeyInfo}>
-            请输入您的 Google Gemini API 密钥。您可以在
+            <span>请输入您的 Google Gemini API 密钥。您可以在</span>
             <a
               href="https://ai.google.dev/"
               target="_blank"
               rel="noopener noreferrer">
               Google AI Studio
             </a>
-            创建密钥。
+            <span>创建密钥。</span>
           </p>
           <div className={styles.inputWrapper}>
             <input

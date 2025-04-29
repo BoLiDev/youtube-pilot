@@ -17,12 +17,22 @@
   font-size: 13px;
   line-height: 1.5;
   margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.apiKeyInfo span {
+  flex-grow: 0;
+  margin-right: 5px;
+  word-break: keep-all;
+  white-space: nowrap;
 }
 
 .apiKeyInfo a {
   color: #0066cc;
-  margin: 0 4px;
   text-decoration: none;
+  margin: 0 3px;
 }
 
 .apiKeyInfo a:hover {
@@ -34,7 +44,7 @@
   padding: 2px 6px;
   border-radius: 3px;
   font-family: monospace;
-  margin: 0 4px;
+  word-break: break-all;
 }
 
 .savedKeyContainer {
@@ -55,22 +65,20 @@
 }
 
 .inputWrapper input {
-  /* Assuming input style comes from global or default */
   flex: 1;
   padding-right: 60px;
 }
 
 .toggleKeyBtn {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
   background: none;
   border: none;
   color: #666;
   cursor: pointer;
   font-size: 12px;
-  padding: 4px 8px;
+  padding: 0;
+  margin-left: 8px;
+  flex-shrink: 0;
+  line-height: inherit;
 }
 
 .toggleKeyBtn:hover {
