@@ -1,7 +1,7 @@
 {
   "name": "youtube-summarizer",
   "displayName": "YouTube视频总结",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "一个使用Gemini AI自动总结YouTube视频内容的Chrome扩展。",
   "author": "Plasmo Corp. <foss@plasmo.com>",
   "scripts": {
