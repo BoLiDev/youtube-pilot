@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from "mobx"
+import { computed, makeAutoObservable, runInAction } from "mobx"
 
 import {
   getApiKey,
@@ -38,17 +38,20 @@ class PopupStore {
     this.loadApiKey()
   }
 
+  get isAvailable(): boolean {
+    return !!this.videoUrl && !!this.apiKey
+  }
+
+  get isOverallLoading(): boolean {
+    return (
+      this.isLoadingSummary ||
+      this.isLoadingNotes ||
+      aiServiceStore.isProcessing
+    )
+  }
+
   setActiveTab(tab: TabType) {
     this.activeTab = tab
-    if (
-      tab === TabType.DETAILED_NOTES &&
-      !this.detailedNotes &&
-      !aiServiceStore.isProcessing &&
-      this.videoUrl &&
-      this.apiKey
-    ) {
-      this.fetchDetailedNotes()
-    }
   }
 
   setVideoUrl(url: string) {
@@ -67,28 +70,12 @@ class PopupStore {
     this.error = ""
   }
 
-  get isOverallLoading() {
-    return this.isLoadingSummary || this.isLoadingNotes
-  }
-
-  get isAvailable() {
-    return this.isYouTubeVideo && this.videoUrl && this.apiKey
-  }
-
   async loadApiKey() {
     const key = await getApiKey()
     runInAction(() => {
       this.apiKey = key
       if (key && this.error.includes("API密钥")) {
         this.clearError()
-      }
-      if (
-        this.isYouTubeVideo &&
-        this.videoUrl &&
-        this.apiKey &&
-        this.activeTab === TabType.QUICK_SUMMARY
-      ) {
-        this.fetchSummary()
       }
     })
   }
@@ -103,11 +90,6 @@ class PopupStore {
       runInAction(() => {
         this.apiKey = newApiKey
         this.clearError()
-        if (this.isYouTubeVideo && this.videoUrl) {
-          if (this.activeTab === TabType.QUICK_SUMMARY) this.fetchSummary()
-          else if (this.activeTab === TabType.DETAILED_NOTES)
-            this.fetchDetailedNotes()
-        }
       })
     } catch (e) {
       runInAction(() => {
@@ -132,6 +114,7 @@ class PopupStore {
         }
       })
     } catch (error) {
+      console.error("获取当前标签页信息时出错:", error)
       runInAction(() => {
         this.setError("无法获取当前标签页信息。请刷新后重试。")
       })
@@ -139,8 +122,7 @@ class PopupStore {
   }
 
   async fetchSummary() {
-    if (!this.videoUrl || !this.apiKey) return
-    if (aiServiceStore.isProcessing) return
+    if (!this.isAvailable || !this.videoUrl) return
 
     this.clearError()
     this.isLoadingSummary = true
@@ -155,6 +137,7 @@ class PopupStore {
         this.summary = result
       })
     } catch (error) {
+      console.error("PopupStore: 获取视频摘要时出错:", error)
       this.setError(`生成摘要失败: ${error.message || "未知错误"}`)
     } finally {
       runInAction(() => {
@@ -164,8 +147,7 @@ class PopupStore {
   }
 
   async fetchDetailedNotes() {
-    if (!this.videoUrl || !this.apiKey) return
-    if (aiServiceStore.isProcessing) return
+    if (!this.isAvailable || !this.videoUrl) return
 
     this.clearError()
     this.isLoadingNotes = true
@@ -180,6 +162,7 @@ class PopupStore {
         this.detailedNotes = result
       })
     } catch (error) {
+      console.error("PopupStore: 获取详细笔记时出错:", error)
       this.setError(`生成笔记失败: ${error.message || "未知错误"}`)
     } finally {
       runInAction(() => {
