@@ -1,7 +1,6 @@
 /* Styles specific to ProgressIndicator component */
 .progressIndicator {
   height: 2.5em;
-  overflow: hidden;
   position: relative;
   background-color: #f0f0f0;
   border-radius: 4px;
@@ -9,31 +8,33 @@
   margin-top: 15px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .progressIndicator p {
   margin: 0;
-  line-height: 2.5em;
+  line-height: 1.5em;
   white-space: nowrap;
-  position: absolute;
-  width: 100%;
-  text-align: center;
-  animation: scroll-up 8s linear infinite;
 }
 
-@keyframes scroll-up {
+/* Spinner styles */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ccc;
+  border-top: 2px solid #cc0000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Keyframes for the spinner animation */
+@keyframes spin {
   0% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  10%,
-  90% {
-    transform: translateY(0%);
-    opacity: 1;
+    transform: rotate(0deg);
   }
   100% {
-    transform: translateY(-100%);
-    opacity: 0;
+    transform: rotate(360deg);
   }
 }

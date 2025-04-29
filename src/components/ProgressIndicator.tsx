@@ -11,6 +11,7 @@ const ProgressIndicator = observer(() => {
 
   return (
     <div className={styles.progressIndicator}>
+      <div className={styles.spinner}></div>
       <p>{aiServiceStore.status}</p>
     </div>
   )
